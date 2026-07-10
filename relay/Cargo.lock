@@ -1443,6 +1443,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "axum",
+ "base64",
+ "nostr",
  "nostr-lmdb",
  "nostr-relay-builder",
  "serde",

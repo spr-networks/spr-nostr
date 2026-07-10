@@ -66,6 +66,14 @@ const validatePort = (portStr) => {
   return ''
 }
 
+const validatePubkey = (pk) => {
+  const v = (pk || '').trim()
+  if (!v) return ''
+  if (!/^[0-9a-fA-F]{64}$/.test(v))
+    return 'Public key must be 64 hex characters (or empty)'
+  return ''
+}
+
 const CopyButton = ({ value, label = 'Copy', onCopied, onFailed }) => (
   <Button
     size="xs"
@@ -120,6 +128,10 @@ export default function Plugin() {
   const [portStr, setPortStr] = useState('')
   const [mode, setMode] = useState('both')
   const [requireAuth, setRequireAuth] = useState(false)
+  const [relayName, setRelayName] = useState('')
+  const [relayDescription, setRelayDescription] = useState('')
+  const [relayPubkey, setRelayPubkey] = useState('')
+  const [relayContact, setRelayContact] = useState('')
   const [saving, setSaving] = useState(false)
 
   // deliberate actions
@@ -144,6 +156,10 @@ export default function Plugin() {
             setPortStr(String(c.value.Port))
             setMode(c.value.Mode || 'both')
             setRequireAuth(!!c.value.RequireAuth)
+            setRelayName(c.value.RelayName || '')
+            setRelayDescription(c.value.RelayDescription || '')
+            setRelayPubkey(c.value.RelayPubkey || '')
+            setRelayContact(c.value.RelayContact || '')
             formInit.current = true
           }
         }
@@ -159,27 +175,40 @@ export default function Plugin() {
   }, [])
 
   const portError = validatePort(portStr)
+  const pubkeyError = validatePubkey(relayPubkey)
   const dirty =
     !!config &&
     (portStr !== String(config.Port) ||
       mode !== (config.Mode || 'both') ||
-      requireAuth !== !!config.RequireAuth)
+      requireAuth !== !!config.RequireAuth ||
+      relayName !== (config.RelayName || '') ||
+      relayDescription !== (config.RelayDescription || '') ||
+      relayPubkey !== (config.RelayPubkey || '') ||
+      relayContact !== (config.RelayContact || ''))
 
   const resetForm = () => {
     if (!config) return
     setPortStr(String(config.Port))
     setMode(config.Mode || 'both')
     setRequireAuth(!!config.RequireAuth)
+    setRelayName(config.RelayName || '')
+    setRelayDescription(config.RelayDescription || '')
+    setRelayPubkey(config.RelayPubkey || '')
+    setRelayContact(config.RelayContact || '')
   }
 
   const save = () => {
-    if (portError || !dirty || saving) return
+    if (portError || pubkeyError || !dirty || saving) return
     setSaving(true)
     api
       .put(`${BASE}/config`, {
         Port: Number(portStr),
         Mode: mode,
-        RequireAuth: requireAuth
+        RequireAuth: requireAuth,
+        RelayName: relayName,
+        RelayDescription: relayDescription,
+        RelayPubkey: relayPubkey.trim(),
+        RelayContact: relayContact
       })
       .then((c) => {
         setConfig(c)
@@ -380,11 +409,40 @@ export default function Plugin() {
             />
           </HStack>
 
-          <Text size="xs" color="$muted500">
-            Note: this relay build ({status.Engine || 'nostr-relay-builder'}) does not serve a
-            NIP-11 relay information document, so relay name/description/contact metadata is not
-            configurable here.
-          </Text>
+          <VStack space="sm">
+            <SectionHeader title="Relay information (NIP-11)" />
+            <Text size="xs" color="$muted500">
+              Served on the relay port as the NIP-11 document, so Nostr clients can show who runs
+              this relay. All fields are optional.
+            </Text>
+            <TextField
+              label="Name"
+              value={relayName}
+              onChangeText={setRelayName}
+              placeholder="e.g. Home relay"
+              helper="Short display name shown by clients."
+            />
+            <TextField
+              label="Description"
+              value={relayDescription}
+              onChangeText={setRelayDescription}
+              placeholder="What this relay is for"
+            />
+            <TextField
+              label="Owner public key"
+              value={relayPubkey}
+              onChangeText={setRelayPubkey}
+              placeholder="64-char hex (optional)"
+              error={pubkeyError}
+              helper="Your Nostr public key in hex (not npm/npub). Leave blank to omit."
+            />
+            <TextField
+              label="Contact"
+              value={relayContact}
+              onChangeText={setRelayContact}
+              placeholder="mailto:you@example.com or a URL"
+            />
+          </VStack>
 
           <HStack justifyContent="space-between" alignItems="center" flexWrap="wrap" gap="$2">
             <Text size="xs" color="$muted500" flex={1} minWidth={200}>
@@ -396,7 +454,11 @@ export default function Plugin() {
                   <ButtonText>Discard</ButtonText>
                 </Button>
               ) : null}
-              <Button size="sm" isDisabled={!dirty || saving || !!portError} onPress={save}>
+              <Button
+                size="sm"
+                isDisabled={!dirty || saving || !!portError || !!pubkeyError}
+                onPress={save}
+              >
                 <ButtonText>{saving ? 'Saving…' : 'Save & apply'}</ButtonText>
               </Button>
             </HStack>

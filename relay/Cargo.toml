@@ -13,16 +13,23 @@ path = "src/main.rs"
 
 [dependencies]
 # The relay engine and its LMDB persistence backend, pinned exactly to the
-# 0.44.1 line (API verified against the vendored crate source in ~/.cargo).
+# latest 0.44.x stable patches (verified on crates.io / against the vendored
+# crate source in ~/.cargo). NOT the 0.45 alphas.
 nostr-relay-builder = "=0.44.1"
 nostr-lmdb = "=0.44.1"
+# Direct dep on `nostr` (same 0.44.4 the relay-builder uses) for the NIP-11
+# `RelayInformationDocument` type and its re-exported sha1 (WebSocket accept-key).
+nostr = "=0.44.4"
 # axum 0.8 is required to serve over a tokio UnixListener
 # (`impl Listener for tokio::net::UnixListener`); 0.7's `serve` is TCP-only.
 axum = "=0.8.9"
-tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "fs", "signal", "time", "sync"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros", "net", "fs", "signal", "time", "sync", "io-util"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 anyhow = "1"
+# WebSocket Sec-WebSocket-Accept base64 (mirrors nostr-relay-builder's own
+# examples/hyper.rs fronting recipe).
+base64 = "0.22"
 
 [profile.release]
 # Reproducible, small binary. `strip = "symbols"` == `-C strip=symbols`.

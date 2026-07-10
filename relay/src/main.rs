@@ -6,6 +6,8 @@
 //! no forked relay process — "restart" rebuilds the relay in-process.
 
 mod config;
+mod http;
+mod nip11;
 mod relay;
 mod topology;
 
@@ -74,8 +76,8 @@ struct StatusResp {
     version: String,
     #[serde(rename = "Engine")]
     engine: String,
-    /// 0.44.1's relay does not serve a NIP-11 document and exposes no API to
-    /// configure relay metadata, so this is always false. The UI states as much.
+    /// We serve a NIP-11 relay information document from the relay port
+    /// ourselves (see http.rs), so this is true and the metadata is configurable.
     #[serde(rename = "Nip11Supported")]
     nip11_supported: bool,
     #[serde(rename = "UptimeSeconds")]
@@ -110,7 +112,7 @@ async fn handle_status(State(st): State<AppState>) -> Json<StatusResp> {
         require_auth: cfg.require_auth,
         version: concat!("v", env!("CARGO_PKG_VERSION")).to_string(),
         engine: ENGINE.to_string(),
-        nip11_supported: false,
+        nip11_supported: true,
         uptime_seconds: snap.uptime_seconds,
         db_bytes: st.sup.db_bytes(),
     })

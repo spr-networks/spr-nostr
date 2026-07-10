@@ -51,6 +51,18 @@ pub struct Config {
     /// Maps to `RelayBuilder::nip42(RelayBuilderNip42 { mode: Both })`.
     #[serde(rename = "RequireAuth", default)]
     pub require_auth: bool,
+    /// NIP-11 relay name (empty = omitted from the document).
+    #[serde(rename = "RelayName", default)]
+    pub relay_name: String,
+    /// NIP-11 relay description (empty = omitted).
+    #[serde(rename = "RelayDescription", default)]
+    pub relay_description: String,
+    /// NIP-11 owner public key, 64-char hex (empty = omitted).
+    #[serde(rename = "RelayPubkey", default)]
+    pub relay_pubkey: String,
+    /// NIP-11 owner contact, e.g. `mailto:` or a URL (empty = omitted).
+    #[serde(rename = "RelayContact", default)]
+    pub relay_contact: String,
 }
 
 impl Default for Config {
@@ -59,8 +71,24 @@ impl Default for Config {
             port: DEFAULT_PORT,
             mode: Mode::default(),
             require_auth: false,
+            relay_name: String::new(),
+            relay_description: String::new(),
+            relay_pubkey: String::new(),
+            relay_contact: String::new(),
         }
     }
+}
+
+/// Maximum accepted length for free-text NIP-11 fields.
+const MAX_NAME: usize = 256;
+const MAX_DESCRIPTION: usize = 2048;
+const MAX_CONTACT: usize = 256;
+
+fn reject_control_chars(field: &str, value: &str) -> Result<(), String> {
+    if value.chars().any(|c| c.is_control()) {
+        return Err(format!("{field} must not contain control characters"));
+    }
+    Ok(())
 }
 
 impl Config {
@@ -69,6 +97,27 @@ impl Config {
     pub fn validate(&self) -> Result<(), String> {
         if self.port < 1 {
             return Err("Port must be between 1 and 65535".to_string());
+        }
+        if self.relay_name.len() > MAX_NAME {
+            return Err(format!("RelayName must be at most {MAX_NAME} characters"));
+        }
+        if self.relay_description.len() > MAX_DESCRIPTION {
+            return Err(format!(
+                "RelayDescription must be at most {MAX_DESCRIPTION} characters"
+            ));
+        }
+        if self.relay_contact.len() > MAX_CONTACT {
+            return Err(format!(
+                "RelayContact must be at most {MAX_CONTACT} characters"
+            ));
+        }
+        reject_control_chars("RelayName", &self.relay_name)?;
+        reject_control_chars("RelayDescription", &self.relay_description)?;
+        reject_control_chars("RelayContact", &self.relay_contact)?;
+        // Pubkey is optional; when set it must be 64-char hex (NIP-01 pubkey).
+        let pk = self.relay_pubkey.trim();
+        if !pk.is_empty() && (pk.len() != 64 || !pk.bytes().all(|b| b.is_ascii_hexdigit())) {
+            return Err("RelayPubkey must be 64 hex characters (or empty)".to_string());
         }
         Ok(())
     }
@@ -125,12 +174,37 @@ mod tests {
         assert!(c.validate().is_ok());
     }
 
+    fn sample(port: u16, mode: Mode, auth: bool) -> Config {
+        Config {
+            port,
+            mode,
+            require_auth: auth,
+            ..Config::default()
+        }
+    }
+
     #[test]
     fn rejects_port_zero() {
+        assert!(sample(0, Mode::Both, false).validate().is_err());
+    }
+
+    #[test]
+    fn pubkey_must_be_64_hex_or_empty() {
+        let mut c = Config::default();
+        assert!(c.validate().is_ok(), "empty pubkey is allowed");
+        c.relay_pubkey = "abc".to_string();
+        assert!(c.validate().is_err(), "short pubkey rejected");
+        c.relay_pubkey = "z".repeat(64);
+        assert!(c.validate().is_err(), "non-hex pubkey rejected");
+        c.relay_pubkey = "a".repeat(64);
+        assert!(c.validate().is_ok(), "64-char hex accepted");
+    }
+
+    #[test]
+    fn rejects_control_chars_in_name() {
         let c = Config {
-            port: 0,
-            mode: Mode::Both,
-            require_auth: false,
+            relay_name: "bad\u{0007}name".to_string(),
+            ..Config::default()
         };
         assert!(c.validate().is_err());
     }
@@ -141,6 +215,10 @@ mod tests {
             port: 8000,
             mode: Mode::Read,
             require_auth: true,
+            relay_name: "Home relay".to_string(),
+            relay_description: "personal".to_string(),
+            relay_pubkey: "a".repeat(64),
+            relay_contact: "mailto:me@example.com".to_string(),
         };
         let s = serde_json::to_string(&c).unwrap();
         // PascalCase field names + lowercase mode string are the wire contract
@@ -148,6 +226,11 @@ mod tests {
         assert!(s.contains("\"Port\":8000"), "{s}");
         assert!(s.contains("\"Mode\":\"read\""), "{s}");
         assert!(s.contains("\"RequireAuth\":true"), "{s}");
+        assert!(s.contains("\"RelayName\":\"Home relay\""), "{s}");
+        assert!(
+            s.contains("\"RelayContact\":\"mailto:me@example.com\""),
+            "{s}"
+        );
         let back: Config = serde_json::from_str(&s).unwrap();
         assert_eq!(back, c);
     }
@@ -174,11 +257,7 @@ mod tests {
         let dir = std::env::temp_dir().join(format!("spr-nostr-cfg-{}", std::process::id()));
         let _ = fs::create_dir_all(&dir);
         let p = dir.join("config.json");
-        let c = Config {
-            port: 9001,
-            mode: Mode::Write,
-            require_auth: false,
-        };
+        let c = sample(9001, Mode::Write, false);
         c.save_atomic(&p).unwrap();
         use std::os::unix::fs::PermissionsExt;
         let mode = fs::metadata(&p).unwrap().permissions().mode() & 0o777;

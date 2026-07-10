@@ -25,6 +25,10 @@ the relay down and rebuilds it in-process from the new config.
   `nostr-relay-builder` `WritePolicy` / `QueryPolicy` plugins.
 - **Optional NIP-42 authentication** — require clients to authenticate before
   reading or writing.
+- **NIP-11 relay information** — the plugin serves a NIP-11 Relay Information
+  Document (name, description, owner pubkey, contact, supported NIPs, software,
+  version) on the relay port itself, so clients can discover the relay's
+  metadata.
 - **Topology** — contributes the relay as a service node to SPR's topology
   view (`HasTopology` + `GET /topology`).
 - **No host ports.** The relay listens on the container IP on the `spr-nostr`
@@ -90,7 +94,7 @@ auth) at `/plugins/spr-nostr/<path>`.
 | --- | --- | --- |
 | GET | `/status` | Relay state, copyable ws:// address, host, port, mode, auth, version, engine, uptime, DB size |
 | GET | `/address` | The copyable relay address: `{Address, Host, Port}` |
-| GET | `/config` | Plugin configuration `{Port, Mode, RequireAuth}` |
+| GET | `/config` | Plugin configuration `{Port, Mode, RequireAuth, RelayName, RelayDescription, RelayPubkey, RelayContact}` |
 | PUT | `/config` | Validate + save config, then rebuild the relay in-process |
 | POST | `/restart` | Rebuild the relay in-process from the current config |
 | GET | `/topology` | Topology contribution (root anchor + relay service node) |
@@ -101,7 +105,11 @@ auth) at `/plugins/spr-nostr/<path>`.
 {
   "Port": 7777,
   "Mode": "both",
-  "RequireAuth": false
+  "RequireAuth": false,
+  "RelayName": "Home relay",
+  "RelayDescription": "My personal Nostr relay",
+  "RelayPubkey": "",
+  "RelayContact": "mailto:me@example.com"
 }
 ```
 
@@ -114,15 +122,25 @@ auth) at `/plugins/spr-nostr/<path>`.
 | `Port` | `7777` | TCP port the relay listens on (container IP, `spr-nostr` bridge) |
 | `Mode` | `"both"` | `read` (reject EVENT — read-only), `write` (reject REQ — write-only), or `both`. Enforced with `nostr-relay-builder` `WritePolicy` / `QueryPolicy` plugins |
 | `RequireAuth` | `false` | Require NIP-42 client authentication for reading and writing (`RelayBuilder::nip42`) |
+| `RelayName` | `""` | NIP-11 relay name (empty = omitted) |
+| `RelayDescription` | `""` | NIP-11 description (empty = omitted) |
+| `RelayPubkey` | `""` | NIP-11 owner public key, 64-char hex (empty = omitted) |
+| `RelayContact` | `""` | NIP-11 owner contact, e.g. `mailto:` or URL (empty = omitted) |
 
-### A note on NIP-11 relay metadata
+### NIP-11 relay information
 
-`nostr-relay-builder` `0.44.1` does **not** serve a NIP-11 relay information
-document and exposes no API to set relay name / description / contact / pubkey.
-Those fields are therefore intentionally omitted from the config rather than
-faked — `/status` reports `Nip11Supported: false`. If a future
-`nostr-relay-builder` release adds NIP-11 support, wire it here and extend the
-config.
+`nostr-relay-builder` `0.44.1` does not serve NIP-11 itself, so the plugin does
+it: because `LocalRelay::take_connection` expects an already-upgraded stream (it
+performs no WebSocket handshake), the plugin **fronts the relay** — it binds the
+listener, and for each connection reads the request head and dispatches. A `GET`
+with `Accept: application/nostr+json` (no Upgrade) gets a NIP-11 Relay
+Information Document (built from the config, with permissive CORS) on the *same*
+relay port; a WebSocket upgrade gets the `101` handshake written by the plugin,
+after which the upgraded stream is handed to `take_connection`. This mirrors the
+crate's own `examples/hyper.rs`; `LocalRelay::run()` is not used. `/status`
+reports `Nip11Supported: true`. The document advertises `supported_nips`
+`[1, 9, 11, 45, 77]` (plus `42` when authentication is required) — only NIPs the
+relay actually implements.
 
 ## Topology
 

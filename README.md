@@ -62,8 +62,8 @@ let Nostr clients reach it:
    to it. Nostr `ws://` is unencrypted — put it behind a TLS-terminating
    reverse proxy (`wss://`) if you expose it to the internet.
 
-The relay is standalone (no federation / outbound connections), so the plugin
-is **not** granted the `wan` policy.
+The plugin is granted the `wan` and `dns` policies for outbound name resolution
+and connectivity, and the `nostr` group so LAN clients can reach the relay.
 
 ## Install (UI)
 
@@ -157,7 +157,7 @@ anchor.
 - **No published host ports**; `network_mode: host` is not used. The only
   listeners are the plugin unix socket (0770) and the relay on the container IP
   `:7777` on the dedicated `spr-nostr` bridge, gated by SPR policies/groups
-  (`lan` + `nostr`). No `wan` policy — the relay makes no outbound connections.
+  (`wan` + `dns` policies, `nostr` group).
 - **No extra capabilities** (`cap_add` empty), no devices,
   `security_opt: no-new-privileges:true`.
 - **Data**: the LMDB event store lives under `/state/plugins/spr-nostr/db`

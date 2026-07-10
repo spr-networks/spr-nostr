@@ -30,9 +30,9 @@ CONTAINER_IP=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{.IP
 API=127.0.0.1
 
 # Register the plugin's bridge interface with the SPR firewall:
-# the nostr group + lan policy let LAN Nostr clients reach the relay on
-# ${CONTAINER_IP}:7777. The relay is standalone (no federation/outbound), so
-# it is NOT granted the wan policy.
+# the nostr group lets LAN Nostr clients reach the relay on ${CONTAINER_IP}:7777,
+# and the wan + dns policies allow the plugin outbound name resolution and
+# connectivity.
 curl "http://${API}/firewall/custom_interface" \
 -H "Authorization: Bearer ${SPR_API_TOKEN}" \
 -X 'PUT' \

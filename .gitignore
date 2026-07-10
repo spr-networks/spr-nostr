@@ -1,0 +1,6 @@
+configs/
+state/
+node_modules
+frontend/build
+.DS_Store
+relay/target

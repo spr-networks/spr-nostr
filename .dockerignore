@@ -1,0 +1,10 @@
+# Keep the build context deterministic and small. Host-installed deps and build
+# outputs must never leak into the image — the Node stage does a clean
+# --frozen-lockfile install and the Rust stage builds from source with a tmpfs
+# target dir.
+.git
+**/node_modules
+frontend/build
+relay/target
+**/*.log
+.DS_Store

@@ -10,8 +10,13 @@
   "InstallTokenPath": "/configs/plugins/spr-nostr/api-token",
   "NetworkCapabilities": {
     "Interface": "spr-nostr",
-    "Policies": ["lan"],
-    "Groups": ["nostr"]
+    "Policies": [
+      "wan",
+      "dns"
+    ],
+    "Groups": [
+      "nostr"
+    ]
   },
   "Enabled": true
 }

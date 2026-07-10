@@ -51,9 +51,9 @@ group decide who can reach it.
 The relay binds `CONTAINER_IP:7777` (ws) on the `spr-nostr` bridge. Two ways to
 let Nostr clients reach it:
 
-1. **LAN (default).** The plugin interface carries the `lan` policy and the
-   `nostr` group, so clients on your network can reach `CONTAINER_IP:7777`.
-   Copy the address from the UI and add it in your Nostr app under Relays.
+1. **LAN clients (default).** Add the client devices to the `nostr` group; they
+   can then reach `CONTAINER_IP:7777` on the bridge. Copy the address from the
+   UI and add it in your Nostr app under Relays.
 2. **Internet exposure (optional, documented only).** To serve roaming devices,
    add an SPR port forward: in the SPR UI, **Firewall → Port Forwarding**,
    forward a WAN TCP port to `CONTAINER_IP:7777`, and use your public IP / DDNS
@@ -70,8 +70,8 @@ and connectivity, and the `nostr` group so LAN clients can reach the relay.
 In the SPR UI: **Plugins → + New Plugin** and enter this repository's GitHub
 URL (e.g. `https://github.com/USER/spr-nostr`). SPR clones the repo, builds the
 container and starts the plugin. The `plugin.json` `NetworkCapabilities`
-register the `spr-nostr` interface with the `lan` policy and the `nostr` group
-automatically.
+register the `spr-nostr` interface with the `wan` and `dns` policies and the
+`nostr` group automatically.
 
 ## Install (CLI)
 
@@ -83,7 +83,7 @@ cd spr-nostr
 
 `install.sh` writes the API token, builds and starts the container, and
 registers the container IP with SPR's firewall
-(`PUT /firewall/custom_interface`, policy `lan`, group `nostr`).
+(`PUT /firewall/custom_interface`, policies `wan`, `dns`, group `nostr`).
 
 ## API
 

@@ -1,0 +1,17 @@
+{
+  "Name": "spr-nostr",
+  "ComposeFilePath": "plugins/user/spr-nostr/docker-compose.yml",
+  "UnixPath": "/state/plugins/spr-nostr/socket",
+  "URI": "spr-nostr",
+  "HasUI": true,
+  "Icon": "Radio",
+  "HasTopology": true,
+  "SandboxedUI": false,
+  "InstallTokenPath": "/configs/plugins/spr-nostr/api-token",
+  "NetworkCapabilities": {
+    "Interface": "spr-nostr",
+    "Policies": ["lan"],
+    "Groups": ["nostr"]
+  },
+  "Enabled": true
+}

@@ -1,0 +1,31 @@
+version: '3.4'
+
+x-labels:
+  &default-labels
+  # constant (not $CI) so digests are reproducible across CI/local
+  org.supernetworks.ci: "true"
+  org.supernetworks.version: ${RELEASE_VERSION:-latest}${RELEASE_CHANNEL:-}
+
+services:
+  spr-nostr:
+    container_name: spr-nostr
+    image: ghcr.io/spr-networks/spr-nostr:${RELEASE_VERSION:-latest}${RELEASE_CHANNEL:-}
+    build:
+      context: "${BUILDCTX:-.}"
+      labels: *default-labels
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      nostrnet:
+    volumes:
+      - "${SUPERDIR}./state/plugins/spr-nostr:/state/plugins/spr-nostr"
+      - "${SUPERDIR}./configs/base/config.sh:/configs/base/config.sh:ro"
+      - "${SUPERDIR}./configs/plugins/spr-nostr:/configs/spr-nostr"
+
+# The bridge name must match NetworkCapabilities.Interface in plugin.json and
+# the Interface used for the /firewall/custom_interface rule in install.sh.
+networks:
+  nostrnet:
+    name: spr-nostr
+    driver_opts:
+      com.docker.network.bridge.name: spr-nostr

@@ -1,6 +1,6 @@
 {
   "Name": "spr-nostr",
-  "ComposeFilePath": "plugins/user/spr-nostr/docker-compose.yml",
+  "ComposeFilePath": "plugins/user/spr-nostr/docker-compose-krun.yml",
   "UnixPath": "/state/plugins/spr-nostr/socket",
   "URI": "spr-nostr",
   "HasUI": true,
@@ -9,7 +9,8 @@
   "SandboxedUI": false,
   "InstallTokenPath": "/configs/plugins/spr-nostr/api-token",
   "NetworkCapabilities": {
-    "Interface": "spr-nostr",
+    "Interface": "knostr0",
+    "DeviceMAC": "02:53:50:52:4b:0c",
     "Policies": [
       "wan",
       "dns"

@@ -1,0 +1,21 @@
+services:
+  spr-nostr:
+    extends:
+      file: docker-compose.yml
+      service: spr-nostr
+    runtime: ${SPR_KRUN_RUNTIME:-krun-atlas}
+    network_mode: host
+    networks: !reset []
+    annotations:
+      krun.cpus: "${SPR_KRUN_CPUS:-1}"
+      krun.ram_mib: "${SPR_KRUN_RAM_MIB:-512}"
+      krun.tap_name: "knostr0"
+      krun.net_mac: "${SPR_KRUN_MAC:-02:53:50:52:4b:0c}"
+      krun.vsock_path: "/state/plugins/spr-nostr/socket"
+      krun.vsock_port: "4040"
+    environment:
+      SOCKET_PATH: "/run/spr-krun-plugin/spr-nostr.sock"
+      SPR_KRUN_PLUGIN_SOCKET: "/run/spr-krun-plugin/spr-nostr.sock"
+      SPR_KRUN_VSOCK_PORT: "4040"
+    devices:
+      - "/dev/net/tun:/dev/net/tun"

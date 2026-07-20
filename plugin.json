@@ -1,6 +1,6 @@
 {
   "Name": "spr-nostr",
-  "ComposeFilePath": "plugins/user/spr-nostr/docker-compose-krun.yml",
+  "Runtime": "kvm",
   "UnixPath": "/state/plugins/spr-nostr/socket",
   "URI": "spr-nostr",
   "HasUI": true,

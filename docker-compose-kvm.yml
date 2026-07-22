@@ -11,7 +11,7 @@ services:
       krun.tap_name: "kruntap0"
       krun.net_uplink: "eth0"
       krun.net_mac: "${SPR_KRUN_MAC:-02:53:50:52:4b:0c}"
-      krun.vsock_path: "/state/plugins/spr-nostr/socket"
+      krun.vsock_path: "/state/plugins/spr-nostr/socket.sock"
       krun.vsock_port: "4040"
     environment:
       SOCKET_PATH: "/run/spr-krun-plugin/spr-nostr.sock"

@@ -41,7 +41,7 @@ the relay down and rebuilds it in-process from the new config.
 ## How it integrates with SPR
 
 SPR proxies `/plugins/spr-nostr/…` to the plugin's unix socket at
-`/state/plugins/spr-nostr/socket` and embeds the UI (served from the same
+`/state/plugins/spr-nostr/socket.sock` and embeds the UI (served from the same
 socket) as an iframe under **Plugins → spr-nostr**. The relay itself is only
 exposed on the `spr-nostr` docker bridge; SPR policies and the `nostr` device
 group decide who can reach it.

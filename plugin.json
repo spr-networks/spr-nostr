@@ -1,7 +1,7 @@
 {
   "Name": "spr-nostr",
   "Runtime": "kvm",
-  "UnixPath": "/state/plugins/spr-nostr/socket",
+  "UnixPath": "/state/plugins/spr-nostr/socket.sock",
   "URI": "spr-nostr",
   "HasUI": true,
   "Icon": "Radio",

@@ -7,7 +7,6 @@
   "Icon": "Radio",
   "HasTopology": true,
   "SandboxedUI": false,
-  "InstallTokenPath": "/configs/plugins/spr-nostr/api-token",
   "NetworkCapabilities": {
     "Interface": "spr-nostr",
     "Policies": [

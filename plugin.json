@@ -6,7 +6,7 @@
   "HasUI": true,
   "Icon": "Radio",
   "HasTopology": true,
-  "SandboxedUI": false,
+  "SandboxedUI": true,
   "NetworkCapabilities": {
     "Interface": "spr-nostr",
     "DeviceMAC": "02:53:50:52:4b:0c",

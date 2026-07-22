@@ -202,7 +202,7 @@ async fn wait_for_shutdown() {
 async fn main() -> anyhow::Result<()> {
     let cfg_path = env_path("CONFIG_FILE", "/configs/spr-nostr/config.json");
     let db_path = env_path("NOSTR_DB", "/state/plugins/spr-nostr/db");
-    let socket_path = env_path("SOCKET_PATH", "/state/plugins/spr-nostr/socket");
+    let socket_path = env_path("SOCKET_PATH", "/run/spr-krun-plugin/spr-nostr.sock");
     let ui_dir = env_path("UI_DIR", "/ui");
 
     // Load config; on first boot persist the defaults so the file exists.

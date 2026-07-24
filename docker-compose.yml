@@ -9,7 +9,7 @@ x-labels:
 services:
   spr-nostr:
     container_name: spr-nostr
-    image: ghcr.io/spr-networks/spr-nostr:${RELEASE_VERSION:-latest}${RELEASE_CHANNEL:-}
+    image: ghcr.io/spr-networks/spr-nostr:latest
     build:
       context: "${BUILDCTX:-.}"
       labels: *default-labels
